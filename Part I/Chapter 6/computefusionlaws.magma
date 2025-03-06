@@ -1,0 +1,37 @@
+KC := "F4";
+F := Rationals();
+SetNthreads(24);
+SetGPU(true);
+//SetNGPUs(4);
+construction := 1; // or 2
+load "main.magma";
+load "fusionlaw.magma";
+
+nu :=2;
+if KC eq "G2" then 
+  nu :=3;
+end if;
+
+pos,neg,cartansub := ChevalleyBasis(g);
+//idempotents u_a
+test:= (2*nu*EndVpiToA(S(pos[1],neg[1]))-EndVpiToA(S(pos[1]*neg[1],pos[1]*neg[1])))/(2*nu*(nu+2)*hvee);
+
+//idempotents S(h_a h_a)/K(h_ah_a) with a long
+//test := EndVpiToA(S(pos[1]*neg[1],pos[1]*neg[1]))/(4*hvee);
+
+i:=1;
+
+while ((not (test*test eq test)) and (i lt #pos)) do
+	i:=i+1;
+  //idempotents u_a
+  test:= (2*nu*EndVpiToA(S(pos[i],neg[i]))-EndVpiToA(S(pos[i]*neg[i],pos[i]*neg[i])))/(2*nu*(nu+2)*hvee);
+
+  //idempotents S(h_a h_a)/K(h_ah_a) with a long
+	//test := EndVpiToA(S(pos[i]*neg[i],pos[i]*neg[i]))/(4*hvee);
+end while;
+if(test*test eq test ) then
+	Sprint("found idempotent");
+	eigv, fustab  := fusion_law(A,test);
+	PrintFile("FusionLaw" cat KC cat ".txt", eigv);
+	PrintFile("FusionLaw" cat KC cat ".txt", fustab);
+end if;
