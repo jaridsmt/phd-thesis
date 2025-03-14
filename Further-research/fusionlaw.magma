@@ -1,0 +1,83 @@
+function mult_mat(alg,a);
+	output := [];
+	for i in [1..Dimension(alg)] do
+		column := a*BasisElement(alg,i);
+		Append(~output, Eltseq(column));
+	end for;
+	return Matrix(F,Dimension(alg),Dimension(alg),output);
+end function;
+
+
+
+function fusion_law(alg,u);
+		start := Realtime();
+    output :=  mult_mat(alg,u);
+    eigenvalues := Eigenvalues(output);
+    //result := [**];
+		//teller:=1;
+		//teller2 := 1;
+		Sprint("Eigenvalues calculated");
+		eigenvectors := [Basis(Eigenspace(output, eigenvalue[1])) : eigenvalue in eigenvalues ];
+		eigenvalues := SetToIndexedSet(eigenvalues);
+		Sprint("Eigenvectors calculated");
+		A_basis_new :=  [];
+		Sprint("Sanity check on eigenvectors");
+		for i in [1..#eigenvectors] do
+			for j in [1..#eigenvectors[i]] do
+				a := alg ! Eltseq(eigenvectors[i,j]);
+				
+				assert u*a - eigenvalues[i,1]*a eq 0;
+				Append(~A_basis_new, a);
+			end for;
+		end for;
+
+		A_new, isomorphism := ChangeBasis(alg,A_basis_new : Rep := "Sparse");
+		Sprint("New basis made");
+		test := 0;
+		endi_eigenspaces := [];
+		for i in [1..#eigenvectors] do
+			test := test + #eigenvectors[i];
+			Append(~endi_eigenspaces,test);
+		end for;
+
+		fusiontable := [*[*{} : j in [1..#eigenvalues]*]: i in [1..#eigenvalues]*];
+
+		ki :=1;
+		for i in [1..exp_dim] do
+
+			if i gt endi_eigenspaces[ki] then
+				ki:= ki+1;
+			end if;
+
+			kj := ki;
+
+			for j in [i..exp_dim] do
+
+				if j gt endi_eigenspaces[kj] then
+					kj:= kj+1;
+				end if;
+
+				test := BasisProduct(A_new,i,j);
+				test2 := Support(test);
+				// if ki eq 1 and kj eq 1 then
+				// 	Sprint(test2);
+				// end if;
+
+				for index in test2 do
+					k := 1;
+					while k le #endi_eigenspaces and index gt endi_eigenspaces[k]  do
+						k := k+1;
+					end while;
+					Include(~fusiontable[ki,kj],eigenvalues[k,1]);
+					Include(~fusiontable[kj,ki],eigenvalues[k,1]);
+				end for;
+			end for;
+		end for;
+		print_time(Realtime()-start);
+		Sprint(eigenvalues);
+		Sprint("---------------");
+		for i in [1..#eigenvalues] do
+			Sprint(fusiontable[i]);
+		end for;
+  return eigenvalues,fusiontable;
+end function;

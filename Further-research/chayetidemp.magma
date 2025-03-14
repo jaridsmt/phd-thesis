@@ -1,0 +1,43 @@
+F := Rationals();
+//F<t> := FunctionField(FF);
+SetNthreads(24);
+SetGPU(true);
+//SetNGPUs(4);
+construction := 1; // or 2
+load "main.magma";
+load "fusionlaw.magma";
+
+nu :=2;
+if KC eq "G2" then 
+  nu :=3;
+end if;
+
+
+pos,neg,cartansub := ChevalleyBasis(g);
+highest_root := #pos;
+for i in [1..#pos] do
+    assert pos[i]*pos[highest_root] eq Zero(g);
+end for;
+
+orth_roots := [i : i in [1..#pos] | neg[i]*pos[highest_root] eq Zero(g)];
+highest_orth_root := orth_roots[#orth_roots];
+for i in [1..#orth_roots] do
+    assert pos[orth_roots[i]]*pos[highest_orth_root] eq Zero(g);
+end for;
+
+a := EndVpiToA(S(pos[highest_root],pos[highest_orth_root])); 
+b := EndVpiToA(S(neg[highest_root],neg[highest_orth_root]));
+test := pos[highest_root]*neg[highest_root] + pos[highest_orth_root]*neg[highest_orth_root];
+q := 1/(8*hvee)*EndVpiToA(S(test,test));
+assert a*b eq 2*(hvee)^2*q;
+assert a*q eq a;
+assert b*q eq b;
+assert q*q eq q;
+assert a*a eq Zero(A);
+idemp := 1/2*(q + 1/(2*hvee)*(a+b));
+assert idemp*idemp eq idemp;
+	Sprint("found idempotent");
+	eigv, fustab  := fusion_law(A,idemp);
+	PrintFile("ChayetIdem" cat KC cat ".txt", eigv);
+	PrintFile("ChayetIdem" cat KC cat ".txt", fustab);
+
