@@ -1,8 +1,5 @@
-F := Rationals();
-//F<t> := FunctionField(FF);
-SetNthreads(24);
-SetGPU(true);
-//SetNGPUs(4);
+// Expects KC (Cartan type) and F (field)  to be defined.
+
 construction := 1; // or 2
 load "main.magma";
 load "fusionlaw.magma";

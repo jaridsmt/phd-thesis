@@ -1,3 +1,5 @@
+//Some functions to compute fusion laws
+
 function mult_mat(alg,a);
 	output := [];
 	for i in [1..Dimension(alg)] do
@@ -13,9 +15,6 @@ function fusion_law(alg,u);
 		start := Realtime();
     output :=  mult_mat(alg,u);
     eigenvalues := Eigenvalues(output);
-    //result := [**];
-		//teller:=1;
-		//teller2 := 1;
 		Sprint("Eigenvalues calculated");
 		eigenvectors := [Basis(Eigenspace(output, eigenvalue[1])) : eigenvalue in eigenvalues ];
 		eigenvalues := SetToIndexedSet(eigenvalues);
@@ -59,9 +58,6 @@ function fusion_law(alg,u);
 
 				test := BasisProduct(A_new,i,j);
 				test2 := Support(test);
-				// if ki eq 1 and kj eq 1 then
-				// 	Sprint(test2);
-				// end if;
 
 				for index in test2 do
 					k := 1;
