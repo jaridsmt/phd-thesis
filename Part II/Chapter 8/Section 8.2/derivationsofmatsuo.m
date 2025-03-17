@@ -1,11 +1,10 @@
 load "4trans_axial_algebra.m";
 load "check-axial.m";
-load "check-solid.m";
 
-//computes dimension of derivations of  5-generated matsuo algebras for rationals and field of three elements
+//computes dimension of derivations of 5-generated matsuo algebras for rationals and field of three elements
 
 
-//time printing function
+//time printing function, written by Chayet and Garibaldi 
 function print_time(t);
 	if t le 60 then
 		return Sprintf("%o seconds", t);
@@ -26,7 +25,10 @@ function print_time(t);
 	return Sprintf("%o years", t/(3600*24*365));
 end function;
 
-
+//Computes the dimension of the Lie algebra of derivations of M(W,transpo) over the field field.
+//RETURNS:
+//dim : Dimension of the Lie algebra Der(M)
+// M : the Matsuo algebra (W,transpo)
 function DimensionOfLieAlgebra(W,transpo,field)
   starttime := Realtime();
   so,A,groupelts := ConstructJordanType(W,transpo,field);
@@ -48,17 +50,6 @@ function DimensionOfLieAlgebra(W,transpo,field)
 
   M := SparseMatrix(field);
   for i in [1..n] do
-		//Do A.i*der(A.i) manually to have nicer equations.
-		/*
-		row := NumberOfRows(M)+1;
-		helper :=  der[i,i] ;
-		for column  in [1..n^2] do
-			test := Coefficient(helper,column,1);
-			if  not test eq 0 then
-				SetEntry(~M,row,column,test);
-			end if;
-		end for;
-		*/
     for j in [i..n] do
       //multiplication checking.
       helper :=Eltseq( (A.i*A.j)*der - (A.i*der)*A.j -(A.j*der)*A.i );
@@ -84,27 +75,6 @@ function DimensionOfLieAlgebra(W,transpo,field)
   dim_rad := n-Rank(F);
   Sprintf( "Dimension of radical: %o",dim_rad);
   return dim,M;
-end function;
-
-function ExtendedWeylGroup(KC,k)
-  R := RootDatum(KC);
-  W:= WeylGroup(GrpMat,GroupOfLieType(R,11));
-  n := Rank(W);
-  G:=MatrixGroup<n,GF(k) | [Matrix(GF(k),SimpleReflectionMatrices(W)[i]): i in [1..n]]>;
-  M := GModule(G);
-  K,psi := SplitExtension(CohomologyModule(G,M));
-  //compute inverse image
-  pre := (G.1)@@psi;
-  ker := Kernel(psi);
-  K2,gamma := PermutationGroup(K);
-  inv := gamma(pre);
-  ker2 := gamma(ker);
-  assert inv^2 eq Id(K2);
-  transpositions := Orbit(K2,inv);
-  for i in [2..n] do
-    transpositions join:=Orbit(K2,gamma((G.i)@@psi));
-  end for;
-  return [* K2,transpositions *];
 end function;
 
 groups:= [  ];
@@ -134,7 +104,7 @@ G := Group<a,b,c,d|a^2,b^2,c^2,d^2,(b*c)^3,(c*a)^3,(a*b)^3,(b*d)^3,(d*c)^3,(a*d)
 W:=PermutationGroup(G);
 transpo := Orbit(W,W.1);
 Append(~groups,[* W,transpo *]);
-/*
+
 //####################################################
 G := Group<a,b,c,d|a^2,b^2,c^2,d^2,(b*c)^3,(c*a)^3,(a*b)^3,(b*d)^3,(d*c)^3,(a*d)^3,(a^b*c)^3,(a^b*d)^3,(a^c*d)^3,(b^c*d)^3,(a^b*c^d)^3,(a^c*b^d)^3,(a^d*b^c)^3,a*(b*c*d)^2*a^(-1)*(b*c*d)^(-2)>;
 W:=PermutationGroup(G);
@@ -150,16 +120,16 @@ Append(~groups,[* W,transpo *]);
 
 
 //#####################################################
-//Append(~groups,ExtendedWeylGroup("D4",2));
+Append(~groups,ExtendedWeylGroup("D4",2));
 
 //#####################################################
-//Append(~groups,ExtendedWeylGroup("A4",2));
+Append(~groups,ExtendedWeylGroup("A4",2));
 
 //#####################################################
-//Append(~groups,ExtendedWeylGroup("D4",3));
+Append(~groups,ExtendedWeylGroup("D4",3));
 
 //#####################################################
-//Append(~groups,ExtendedWeylGroup("A4",3));
+Append(~groups,ExtendedWeylGroup("A4",3));
 
 //####################################################
 //F(5,45)
@@ -177,10 +147,10 @@ Append(~groups,[* W,transpo *]);
 
 //####################################################
 //F(5,162)
-//G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^2,(a*d)^2,(a*e)^3,(b*c)^3,(b*d)^3,(b*e)^3,(c*d)^3,(c*e)^2,(d*e)^2,(b^a*e)^3,(b^c*d)^3,(b^(a*e)*b^(c*d))^3,(b^(a*e)*b^(d*c))^3>;
-//W:=PermutationGroup(G);
-//transpo := Orbit(W,W.1);
-//Append(~groups,[* W,transpo *]);
+G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^2,(a*d)^2,(a*e)^3,(b*c)^3,(b*d)^3,(b*e)^3,(c*d)^3,(c*e)^2,(d*e)^2,(b^a*e)^3,(b^c*d)^3,(b^(a*e)*b^(c*d))^3,(b^(a*e)*b^(d*c))^3>;
+W:=PermutationGroup(G);
+transpo := Orbit(W,W.1);
+Append(~groups,[* W,transpo *]);
 
 //####################################################
 //F(5,54)
@@ -192,63 +162,25 @@ Append(~groups,[* W,transpo *]);
 
 //####################################################
 //F(5,165)
-//G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^3,(a*d)^2,(a*e)^2,(b*c)^3,(b*d)^3,(b*e)^2,(c*d)^3,(c*e)^2,(d*e)^3,(b^a*c)^3,(b^d*c)^3,(a^b*c^d)^3>;
-//W:=PermutationGroup(G);
-//transpo := Orbit(W,W.1);
-//Sprint(#transpo);
-//Append(~groups,[* W,transpo *]);
+G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^3,(a*d)^2,(a*e)^2,(b*c)^3,(b*d)^3,(b*e)^2,(c*d)^3,(c*e)^2,(d*e)^3,(b^a*c)^3,(b^d*c)^3,(a^b*c^d)^3>;
+W:=PermutationGroup(G);
+transpo := Orbit(W,W.1);
+Sprint(#transpo);
+Append(~groups,[* W,transpo *]);
 
 //####################################################
 //F(5,360)
-//G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^3,(a*d)^2,(a*e)^2,(b*c)^3,(b*d)^3,(b*e)^2,(c*d)^3,(c*e)^3,(d*e)^2,(b^a*c)^3,(b^d*c)^3,(a^b*c^d)^3,(d^((a*b*c)^2*e))^3>;
-//W:=PermutationGroup(G);
-//transpo := Orbit(W,W.1);
-//Append(~groups,[* W,transpo *]);
+G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^3,(a*d)^2,(a*e)^2,(b*c)^3,(b*d)^3,(b*e)^2,(c*d)^3,(c*e)^3,(d*e)^2,(b^a*c)^3,(b^d*c)^3,(a^b*c^d)^3,(d^((a*b*c)^2*e))^3>;
+W:=PermutationGroup(G);
+transpo := Orbit(W,W.1);
+Append(~groups,[* W,transpo *]);
 
 //####################################################
 //F(5,576)
-//G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^3,(a*d)^2,(a*e)^2,(b*c)^3,(b*d)^3,(b*e)^2,(c*d)^3,(c*e)^3,(d*e)^2,(b^a*c)^3,(b^d*c)^3,(a^b*c^d)^3,(d^((a*b*c)^2*e))^3>;
-//W:=PermutationGroup(G);
-//transpo := Orbit(W,W.1);
-//Append(~groups,[* W,transpo *]);
-*/
-/*
-W:= CoxeterGroup(GrpPermCox,"A3");
-trans := Orbit(W,W.1);
-Append(~groups,[* W,trans *]);
-
-W:= CoxeterGroup(GrpPermCox,"D4");
-trans := Orbit(W,W.1);
-Append(~groups,[* W,trans *]);
-
-Append(~groups,ExtendedWeylGroup("A2",3));
-
-Append(~groups,ExtendedWeylGroup("A5",2));
-
-
-G := Group<a,b,c,d|a^2,b^2,c^2,d^2,(b*c)^3,(c*a)^3,(a*b)^3,(b*d)^3,(d*c)^3,(a*d)^3,(a^b*c)^3,(a^b*d)^3,(a^c*d)^3,(b^c*d)^3,(a^b*c^d)^3,(a^c*b^d)^3,(a^d*b^c)^3,a*(b*c*d)^2*a^(-1)*(b*c*d)^(-2)>;
-W := PermutationGroup(G);
-transpos := Orbit(W,W.1);
-Append(~groups,[*W,transpos*]);
-
-
-G := Group<a,b,c,d|a^2,b^2,c^2,d^2,(b*c)^3,(c*a)^3,(a*b)^3,(b*d)^3,(d*c)^3,(a*d)^3,(a^b*c)^3,(a^b*d)^3,(a^c*d)^3,(b^c*d)^3,(a^b*c^d)^3,(a^c*b^d)^3,(a^d*b^c)^3>;
+G := Group<a,b,c,d,e|a^2,b^2,c^2,d^2,e^2,(a*b)^3,(a*c)^3,(a*d)^2,(a*e)^2,(b*c)^3,(b*d)^3,(b*e)^2,(c*d)^3,(c*e)^3,(d*e)^2,(b^a*c)^3,(b^d*c)^3,(a^b*c^d)^3,(d^((a*b*c)^2*e))^3>;
 W:=PermutationGroup(G);
 transpo := Orbit(W,W.1);
-assert #transpo eq 81;
 Append(~groups,[* W,transpo *]);
-
-
-G:= PrimitiveGroups(63)[5];
-transpositions := Orbit(G,ConjugacyClasses(G)[2][3]);
-assert #transpositions eq 63;
-Append(~groups,[* G,transpositions *]);
-
-G:= PrimitiveGroups(136)[9];
-transpositions := Orbit(G,ConjugacyClasses(G)[2][3]);
-assert #transpositions eq 136;
-Append(~groups,[* G,transpositions *]);
-*/
 
 
 

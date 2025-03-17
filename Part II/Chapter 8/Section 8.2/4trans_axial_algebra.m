@@ -113,6 +113,27 @@ function Star(V,a,b)
   return Bullet(V,Bullet(V,a,b),Bullet(V,a,b));
 end function;
 
+//Function to construct W_k(KC), the 3-transposition group obtained by extending the weyl group of type KC with the root lattice modulo k
+function ExtendedWeylGroup(KC,k)
+  R := RootDatum(KC);
+  W:= WeylGroup(GrpMat,GroupOfLieType(R,11));
+  n := Rank(W);
+  G:=MatrixGroup<n,GF(k) | [Matrix(GF(k),SimpleReflectionMatrices(W)[i]): i in [1..n]]>;
+  M := GModule(G);
+  K,psi := SplitExtension(CohomologyModule(G,M));
+  //compute inverse image
+  pre := (G.1)@@psi;
+  ker := Kernel(psi);
+  K2,gamma := PermutationGroup(K);
+  inv := gamma(pre);
+  ker2 := gamma(ker);
+  assert inv^2 eq Id(K2);
+  transpositions := Orbit(K2,inv);
+  for i in [2..n] do
+    transpositions join:=Orbit(K2,gamma((G.i)@@psi));
+  end for;
+  return [* K2,transpositions *];
+end function;
 
 /*
 Some additional functions needed for the main script
